@@ -1,0 +1,45 @@
+@import './base.css';
+@import "tailwindcss";
+@plugin "daisyui";
+@import 'vue-multiselect/dist/vue-multiselect.css';
+
+body {
+  font-family: 'Lato', sans-serif;
+  line-height: 1.6;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+}
+
+.nunito{
+  font-family: 'Nunito', sans-serif;
+}
+
+.play{
+  font-family: "Playfair Display", serif;
+}
+
+.spinnaker{
+  font-family: 'Spinnaker', sans-serif;
+}
+
+.lato{
+  font-family: 'Lato', sans-serif;
+}
+
+body::-webkit-scrollbar{
+  display:  none;
+}
+
+h1, h2, h3 {
+  font-family: 'Nunito', sans-serif;
+}
+
+button {
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+}
+
+option{
+  background-color: transparent;
+  color: green;
+}

@@ -75,6 +75,13 @@
     {
       "src": "/api/signup",
       "dest": "/api/main.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html",
+      "headers": {
+        "Cache-Control": "no-cache"
+      }
     }
   ]
 }

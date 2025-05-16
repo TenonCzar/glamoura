@@ -1,15 +1,80 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "dist/**/*",
-      "use": "@vercel/static"
-    }
-  ],
   "routes": [
     {
-      "src": "/.*",
-      "dest": "/index.html"
+      "src": "/api/admin/chartdata",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/admin/dashboard-summary",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/admin/getcategory",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/admin/createcategory",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/admin/parentcategories",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/admin/createproduct",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/admin/editproduct",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/admin/getproducts",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/admin/getusers",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/admin/updateuser",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/admin/deleteuser",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/admin/orders",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/admin/orderstats",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/add-to-cart",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/adminpin",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/createadmin",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/featured-products",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/login",
+      "dest": "/api/main.js"
+    },
+    {
+      "src": "/api/signup",
+      "dest": "/api/main.js"
     }
   ]
 }

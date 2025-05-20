@@ -169,17 +169,17 @@
   import { ref, onMounted } from 'vue'
   
   // Components
-  import DashboardCard from '@/views/Users/components/DashboardCard.vue'
-  import OrderItem from '@/views/Users/components/OrderItem.vue'
-  import ProductCard from '@/views/Users/components/ProductCard.vue'
-  import ActionButton from '@/views/Users/components/ActionButton.vue'
+  import DashboardCard from '/src/views/Users/components/DashboardCard.vue'
+  import OrderItem from '/src/views/Users/components/OrderItem.vue'
+  import ProductCard from '/src/views/Users/components/ProductCard.vue'
+  import ActionButton from '/src/views/Users/components/ActionButton.vue'
   
   // Mock data - replace with API calls
   const user = ref({
-    name: 'John Doe',
-    email: 'john@example.com',
-    phone: '+234 (123) 456-7890',
-    joinDate: '2022-01-15',
+    name: 'Tenon Czar',
+    email: 'tenonczar@gmail.com',
+    phone: '+234 8158867576',
+    joinDate: '2025-05-15',
     defaultAddress: '123 Main St, Apt 4B\nNew York, NY 10001'
   })
   

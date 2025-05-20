@@ -98,15 +98,15 @@
 
 <script setup>
 import { ref, onMounted} from 'vue'
-import Categories from '@/views/Admin/components/Categories.vue'
-import Featured from '@/views/Admin/components/Featured.vue'
-import NewArrivals from '@/views/Admin/components/NewArrivals.vue'
-import BestSellers from '@/views/Admin/components/BestSellers.vue'
-import OurValues from '@/views/Admin/components/OurValues.vue'
-import Blog from '@/views/Admin/components/Blog.vue'
-import NewsLetter from '@/views/Admin/components/NewsLetter.vue'
+import Categories from '/src/views/Admin/components/Categories.vue'
+import Featured from '/src/views/Admin/components/Featured.vue'
+import NewArrivals from '/src/views/Admin/components/NewArrivals.vue'
+import BestSellers from '/src/views/Admin/components/BestSellers.vue'
+import OurValues from '/src/views/Admin/components/OurValues.vue'
+import Blog from '/src/views/Admin/components/Blog.vue'
+import NewsLetter from '/src/views/Admin/components/NewsLetter.vue'
 import Footer from './Admin/components/Footer.vue'
-import Cart from '@/views/Users/components/MinimalCart.vue'
+import Cart from '/src/views/Users/components/MinimalCart.vue'
 import { Heart } from 'lucide-vue-next'
 // const isLoading = ref(true)
 

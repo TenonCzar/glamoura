@@ -1,26 +1,25 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import CreateAdmin from '../views/Admin/SignUp.vue'
 import AdminLayout from '../views/Admin/Layout/AdminLayout.vue'
-import DashboardHome from '@/views/Admin/Pages/DashboardHome.vue'
-import Users from '@/views/Admin/Pages/Users.vue'
-import Orders from '@/views/Admin/Pages/Orders.vue'
-import AddProducts from '@/views/Admin/Pages/AddProducts.vue'
-import Category from '@/views/Admin/Pages/CreateCategory.vue'
-import ProductPreview from '@/views/Admin/components/ProductPreview.vue'
-import Inventory from '@/views/Admin/Pages/Inventory.vue'
-import Support from '@/views/Admin/Pages/Suppport.vue'
-import Settings from '@/views/Admin/Pages/Settings.vue'
-import Products from '@/views/Admin/Pages/Products.vue'
-import EditProduct from '@/views/Admin/Pages/[id].vue'
-import { useAuth } from '@/stores/auth'
-import Signup from '@/views/SignUp.vue'
-import Login from '@/views/LogIn.vue'
-import Home from '@/views/Home.vue'
+import DashboardHome from '/src/views/Admin/Pages/DashboardHome.vue'
+import Users from '/src/views/Admin/Pages/Users.vue'
+import Orders from '/src/views/Admin/Pages/Orders.vue'
+import AddProducts from '/src/views/Admin/Pages/AddProducts.vue'
+import Category from '/src/views/Admin/Pages/CreateCategory.vue'
+import ProductPreview from '/src/views/Admin/components/ProductPreview.vue'
+import Inventory from '/src/views/Admin/Pages/Inventory.vue'
+import Support from '/src/views/Admin/Pages/Suppport.vue'
+import Settings from '/src/views/Admin/Pages/Settings.vue'
+import Products from '/src/views/Admin/Pages/Products.vue'
+import EditProduct from '/src/views/Admin/Pages/[id].vue'
+import { useAuth } from '/src/stores/auth'
+import Signup from '/src/views/SignUp.vue'
+import Login from '/src/views/LogIn.vue'
 
 // Users Routes
-import Dashboard from '@/views/Users/Dashboard.vue'
-import Userorders from '@/views/Users/Dashboard.vue'
-import UserSettings from '@/views/Users/Dashboard.vue'
+import Dashboard from '/src/views/Users/Dashboard.vue'
+import Userorders from '/src/views/Users/Dashboard.vue'
+import UserSettings from '/src/views/Users/Dashboard.vue'
 
 const routes = [
   { path: '/auth', component: Login },
@@ -29,7 +28,7 @@ const routes = [
   { path: '/products/:slug', component: ProductPreview },
   {
     path: '/',
-    component: () => import('@/views/HomeView.vue'),
+    component: () => import('/src/views/HomeView.vue'),
     // meta: { requiresAuth: true },
   },
   {

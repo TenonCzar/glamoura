@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-import Sidebar from '@/views/Admin/components/Sidebar.vue'
-import Topbar from '@/views/Admin/components/TopBar.vue'
+import Sidebar from '/src/views/Admin/components/Sidebar.vue'
+import Topbar from '/src/views/Admin/components/TopBar.vue'
 import { RouterLink, RouterView } from 'vue-router'
 </script>

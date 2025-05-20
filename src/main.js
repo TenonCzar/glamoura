@@ -1,7 +1,8 @@
 import './assets/main.css'
 
 import 'vue-multiselect/dist/vue-multiselect.css'
-
+import { Swiper, SwiperSlide } from 'swiper/vue'
+import 'swiper/swiper-bundle.css'
 import ResponseDisplayer from './components/ResponseDisplayer.vue'
 import * as LucideIcons from 'lucide-vue-next'
 

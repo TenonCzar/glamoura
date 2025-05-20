@@ -2,7 +2,7 @@ import { db } from '../db.js'
 import jwt from 'jsonwebtoken'
 import process from 'process'
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
   const { product_id, variant_id, quantity = 1, price } = req.body

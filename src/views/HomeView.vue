@@ -7,7 +7,7 @@
       <div class="text-2xl font-bold">
         Glamoura <span class="text-sm text-indigo-900">by Oli</span>
       </div>
-      <nav class="hidden md:flex gap-12 text-gray-700">
+      <nav class="hidden lg:flex lg:gap-12 text-gray-700">
         <a href="#">Shop</a>
         <a href="#">Categories</a>
         <a href="#">Deals</a>
@@ -15,12 +15,24 @@
         <a href="#">Contact</a>
       </nav>
       <div class="flex gap-4 items-center">
-        <button><Search class="i-lucide-search" /></button>
-        <button><user class="i-lucide-user" /></button>
-        <button>
-          <Shopping-cart :size="20" class="text-orange-400" />
-        </button>
-        <button><Heart :size="20" class="text-orange-400" /></button>
+        <!-- <button><Search class="i-lucide-search" /></button> -->
+        <Router-link to="/auth#signup" class="hidden lg:block text-orange-400 hover:text-blue-400"
+          ><user class="i-lucide-user"
+        /></Router-link>
+        <Cart />
+        <button class="text-orange-400 hover:text-blue-400"><Heart :size="20" /></button>
+        <div class="relative">
+          <Menu class="lg:hidden w-fit cursor-pointer" title="menu" @click="openNav" />
+          <div v-if="mobileNav" @click="openNav" class="mobile-links bg-white absolute top-10 -right-12 w-[50vw] h-[50vh] px-6 py-8 transition-all">
+            <nav class="flex flex-col gap-4 h-[40vh] text-2xl justify-between text-right">
+              <Router-link to="/auth">Login</Router-link>
+              <Router-link to="#">Categories</Router-link>
+              <!-- <Router-link to="#">Deals</Router-link> -->
+              <Router-link to=".about">About</Router-link>
+              <Router-link to="/contact">Contact</Router-link>
+            </nav>
+          </div>
+        </div>
       </div>
 
       <!-- <div class="shopy flex flex-row-reverse gap-4 w-fit bg-red-200">
@@ -79,16 +91,13 @@
     <!-- Our NewsLetter -->
     <NewsLetter />
 
-    <!-- Cart -->
-     <Cart />
-
     <!-- Footer -->
     <Footer />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted} from 'vue'
 import Categories from '@/views/Admin/components/Categories.vue'
 import Featured from '@/views/Admin/components/Featured.vue'
 import NewArrivals from '@/views/Admin/components/NewArrivals.vue'
@@ -97,7 +106,28 @@ import OurValues from '@/views/Admin/components/OurValues.vue'
 import Blog from '@/views/Admin/components/Blog.vue'
 import NewsLetter from '@/views/Admin/components/NewsLetter.vue'
 import Footer from './Admin/components/Footer.vue'
-import Cart from './Admin/components/Cart.vue'
+import Cart from '@/views/Users/components/MinimalCart.vue'
 import { Heart } from 'lucide-vue-next'
 // const isLoading = ref(true)
+
+const cartCount = ref(0)
+const mobileNav = ref(false)
+
+const openNav = () => {
+  mobileNav.value = !mobileNav.value
+}
+
+// Function to calculate total quantity in cart
+const calculateCartCount = () => {
+  const cart = JSON.parse(localStorage.getItem('cart')) || []
+  return cart.reduce((total, item) => total + item.quantity, 0)
+}
+
+// Initialize count on component mount
+cartCount.value = calculateCartCount()
+
+// Watch localStorage changes (optional but nice)
+window.addEventListener('storage', () => {
+  cartCount.value = calculateCartCount()
+})
 </script>

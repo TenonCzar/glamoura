@@ -8,6 +8,7 @@ body {
   line-height: 1.6;
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none;
+  overflow-x: hidden;
 }
 
 .nunito{

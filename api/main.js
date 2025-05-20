@@ -1,68 +1,141 @@
 import { db } from './db.js'
 import jwt from 'jsonwebtoken'
-import process from 'process'
 import formidable from 'formidable'
 import fs from 'fs'
 import path from 'path'
+import process from 'process'
 import { hashPassword, comparePassword, generateToken } from './utils.js'
-export default async function handler(req, res) {
-  const path = req.url.split('?')[0] // Extract path without query params
+const uploadDir = path.join(process.cwd(), 'public', 'uploads')
 
-  if (path === '/api/admin/chartdata') {
-    return await handleChartData(req, res)
-  } else if (path === '/api/admin/dashboard-summary') {
-    return await handleDashboardSummary(req, res)
-  } else if (path === '/api/admin/createcategory') {
-    return await createCategory(req, res)
-  } else if (path === '/api/admin/getcategory') {
-    return await getCategory(req, res)
-  } else if (path === '/api/admin/parentcategories') {
-    return await parentCategory(req, res)
-  } else if (path === '/api/admin/createproduct') {
-    return await createProduct(req, res)
-  } else if (path === '/api/admin/editproduct') {
-    return await editProducts(req, res)
-  } else if (path === '/api/admin/getproducts') {
-    return await getProducts(req, res)
-  } else if (path === '/api/admin/getusers') {
-    return await getUsers(req, res)
-  } else if (path === '/api/admin/updateuser') {
-    return await updateUser(req, res)
-  } else if (path === '/api/admin/deleteuser') {
-    return await deleteUser(req, res)
-  } else if (path === '/api/admin/orders') {
-    return await getOrders(req, res)
-  } else if (path === '/api/admin/orderstats') {
-    return await orderStats(req, res) //User Routes
-  } else if (path === '/api/add-to-cart.js') {
-    return await addToCart(req, res)
-  } else if (path === '/api/adminpin.js') {
-    return await adminPin(req, res)
-  } else if (path === '/api/createadmin.js') {
-    return await createAdmin(req, res)
-  } else if (path === '/api/featured-products.js') {
-    return await featuredProducts(req, res)
-  } else if (path === '/api/login.js') {
-    return await login(req, res)
-  } else if (path === '/api/signup.js') {
-    return await signUp(req, res)
-  } else {
-    return res.status(404).json({ success: false, error: 'Endpoint not found' })
+// Configure formidable for Vercel
+const form = formidable({
+  multiples: true,
+  uploadDir: '/tmp', // Vercel requires tmp directory
+  keepExtensions: true,
+  maxFileSize: 10 * 1024 * 1024, // 10MB limit
+})
+
+export default async function handler(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+
+  // Handle OPTIONS requests for CORS preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
+  // Define routePath early so you can use it anywhere
+  const routePath = req.url.split('?')[0].replace(/\.js$/, '')
+
+  // Handle the special case for product preview
+  if (routePath.startsWith('/api/products/')) {
+    const slug = routePath.replace('/api/products/', '')
+    return await previewProduct(req, res, slug)
+  }
+
+  try {
+    // Now the switch uses the defined routePath
+    switch (routePath) {
+      case '/api/admin/chartdata':
+        return await handleChartData(req, res)
+      case '/api/admin/dashboard-summary':
+        return await handleDashboardSummary(req, res)
+      case '/api/admin/createcategory':
+        return await createCategory(req, res)
+      case '/api/admin/getcategory':
+        return await getCategory(req, res)
+      case '/api/admin/parentcategories':
+        return await parentCategory(req, res)
+      case '/api/admin/createproduct':
+        return await createProduct(req, res)
+      case '/api/admin/editproduct':
+        return await editProducts(req, res)
+      case '/api/admin/getproducts':
+        return await getProducts(req, res)
+      case '/api/admin/getusers':
+        return await getUsers(req, res)
+      case '/api/admin/updateuser':
+        return await updateUser(req, res)
+      case '/api/admin/deleteuser':
+        return await deleteUser(req, res)
+      case '/api/admin/orders':
+        return await getOrders(req, res)
+      case '/api/admin/orderstats':
+        return await orderStats(req, res)
+      case '/api/add-to-cart':
+        return await addToCart(req, res)
+      case '/api/adminpin':
+        return await adminPin(req, res)
+      case '/api/createadmin':
+        return await createAdmin(req, res)
+      case '/api/featured-products':
+        return await featuredProducts(req, res)
+      case '/api/bestsellers':
+        return await bestSellers(req, res)
+      case '/api/login':
+        return await login(req, res)
+      case '/api/signup':
+        return await signUp(req, res)
+      default:
+        return res.status(404).json({ success: false, error: 'Endpoint not found' })
+    }
+  } catch (err) {
+    console.error('API Error:', err)
+    return res.status(500).json({
+      success: false,
+      error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    })
   }
 }
-
 export const config = {
   api: {
     bodyParser: false,
   },
 }
 
+// Utility function for file handling in Vercel
+const handleFileUpload = async (file) => {
+  const uploadDir = path.join('/tmp', 'uploads')
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true })
+  }
+
+  const newFilename = `${Date.now()}-${file.originalFilename}`
+  const newPath = path.join(uploadDir, newFilename)
+
+  // For Vercel, we need to read the file and write it to the new location
+  const fileData = fs.readFileSync(file.filepath)
+  fs.writeFileSync(newPath, fileData)
+  fs.unlinkSync(file.filepath) // Clean up temporary file
+
+  return `/uploads/${newFilename}`
+}
+
+// Slugify function
 const slugify = (str) =>
   str
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 
+// Normalize BigInt values for JSON responses
+function normalizeBigInts(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(normalizeBigInts)
+  } else if (typeof obj === 'object' && obj !== null) {
+    const normalized = {}
+    for (const key in obj) {
+      const value = obj[key]
+      normalized[key] =
+        typeof value === 'bigint' ? Number(value) : normalizeBigInts(value)
+    }
+    return normalized
+  }
+  return obj
+}
 // ADMIN JS ROUTES
 
 // /api/admin/dashboard-summary.js
@@ -366,7 +439,6 @@ async function updateUser(req, res) {
   }
 }
 
-
 // Delete User
 async function deleteUser(req, res) {
   if (req.method !== 'DELETE') return res.status(405).end()
@@ -449,7 +521,6 @@ async function orderStats(req, res) {
   }
 }
 
-
 // Create Category
 async function createCategory(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
@@ -513,21 +584,7 @@ async function parentCategory(req, res) {
   }
 }
 
-
 // Create Product
-function normalizeBigInts(obj) {
-  if (Array.isArray(obj)) {
-    return obj.map(normalizeBigInts)
-  } else if (obj && typeof obj === 'object') {
-    return Object.fromEntries(
-      Object.entries(obj).map(([key, value]) => [
-        key,
-        typeof value === 'bigint' ? Number(value) : value,
-      ]),
-    )
-  }
-  return obj
-}
 
 async function createProduct(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
@@ -572,13 +629,13 @@ async function createProduct(req, res) {
           price,
           compare_at_price,
           cost_price,
-          is_taxable === 'true',
+          is_taxable == 1,
           weight,
           weight_unit,
-          is_active === 'true',
-          is_featured === 'true',
-          is_bestseller === 'true',
-          is_new === 'true',
+          is_active == 1,
+          is_featured == 1,
+          is_bestseller == 1,
+          is_new == 1,
           slug,
           meta_title,
           meta_description,
@@ -656,19 +713,26 @@ async function createProduct(req, res) {
   })
 }
 
+
 // Edit Products
 async function editProducts(req, res) {
   if (req.method !== 'PUT') return res.status(405).end()
 
-  const form = formidable({ multiples: true, keepExtensions: true })
+  const form = formidable({
+    multiples: true,
+    uploadDir: '/tmp',
+    keepExtensions: true,
+    maxFileSize: 10 * 1024 * 1024,
+  })
 
   form.parse(req, async (err, fields, files) => {
-    if (err) return res.status(500).json({ success: false, error: err.message })
-
-    const productId = req.query.id
+    if (err) {
+      return res.status(500).json({ success: false, error: err.message })
+    }
 
     try {
       // Get form fields
+      const productId = req.query.id
       const {
         name,
         description,
@@ -744,7 +808,7 @@ async function editProducts(req, res) {
           `INSERT OR REPLACE INTO inventory (
       inventory_id, product_id, variant_id, quantity, low_stock_threshold, location, last_stock_update
     ) VALUES (
-      COALESCE((SELECT inventory_id FROM inventory WHERE product_id = ? AND variant_id IS ?), NULL),
+      COALESCE((SELECT inventory_id FROM inventory WHERE product_id = ? AND variant_id = ?), NULL),
       ?, ?, ?, ?, ?, CURRENT_TIMESTAMP
     )`,
           [
@@ -785,12 +849,14 @@ async function editProducts(req, res) {
 
       res.status(200).json({ success: true, productId })
     } catch (error) {
-      console.error(error)
-      res.status(500).json({ success: false, error: error.message })
+      console.error('Product edit error:', error)
+      return res.status(500).json({
+        success: false,
+        error: error.message,
+      })
     }
   })
 }
-
 
 // Get Products
 async function getProducts(req, res) {
@@ -842,70 +908,68 @@ async function getProducts(req, res) {
   }
 }
 
-
 // Users JS Routes
 
 // Add to cart
 async function addToCart(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
 
-  const { product_id, variant_id, quantity = 1, price } = req.body
+  const { product_id, variant_id = null, quantity = 1, price } = req.body
 
-  // --- Get IP address ---
-  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress
-
-  // --- Decode JWT ---
   const token = req.cookies?.token
   let user = null
 
   if (token) {
     try {
       user = jwt.verify(token, process.env.JWT_SECRET)
-    } catch (err) {
-      // Invalid token — treat as guest
+    } catch {
       user = null
     }
   }
 
+  if (!user) {
+    // For guests: We don’t store cart on backend now
+    return res.status(200).json({
+      success: true,
+      message: 'Added To Cart. Please log in to save your cart.',
+    })
+  }
+
   try {
-    if (user) {
-      // === LOGGED IN: Ensure user cart exists ===
-      let cart = await db.execute(`SELECT * FROM carts WHERE user_id = ?`, [user.user_id])
+    // Find or create cart for logged-in user
+    let cart = await db.execute(`SELECT * FROM carts WHERE user_id = ?`, [user.user_id])
+    let cart_id
 
-      let cart_id
+    if (cart.rows.length === 0) {
+      const insert = await db.execute(`INSERT INTO carts (user_id) VALUES (?)`, [user.user_id])
+      cart_id = insert.lastInsertRowid
+    } else {
+      cart_id = cart.rows[0].cart_id
+    }
 
-      if (cart.rows.length === 0) {
-        const insert = await db.execute(`INSERT INTO carts (user_id) VALUES (?)`, [user.user_id])
-        cart_id = insert.lastInsertRowid
-      } else {
-        cart_id = cart.rows[0].cart_id
-      }
+    // Check if the product + variant already exists in cart_items
+    let existing = await db.execute(
+      `SELECT * FROM cart_items WHERE cart_id = ? AND product_id = ? AND (variant_id IS ? OR variant_id = ?)`,
+      [cart_id, product_id, variant_id, variant_id],
+    )
 
-      // === Insert into cart_items ===
+    if (existing.rows.length > 0) {
+      // Update quantity
+      const newQuantity = existing.rows[0].quantity + quantity
+      await db.execute(`UPDATE cart_items SET quantity = ? WHERE cart_item_id = ?`, [
+        newQuantity,
+        existing.rows[0].cart_item_id,
+      ])
+    } else {
+      // Insert new item
       await db.execute(
         `INSERT INTO cart_items (cart_id, product_id, variant_id, quantity, price)
-         VALUES (?, ?, ?, ?, ?)`,
+           VALUES (?, ?, ?, ?, ?)`,
         [cart_id, product_id, variant_id, quantity, price],
       )
-
-      res.status(200).json({ success: true, message: 'Added to your cart!' })
-    } else {
-      // === GUEST USER ===
-      const guest_cart_id = ip
-
-      // Create a fake carts entry for guests if you want — optional
-
-      await db.execute(
-        `INSERT INTO cart_items (cart_id, product_id, variant_id, quantity, price)
-         VALUES (?, ?, ?, ?, ?)`,
-        [guest_cart_id, product_id, variant_id, quantity, price],
-      )
-
-      res.status(200).json({
-        success: true,
-        message: 'Added to cart as guest. Please log in to save your cart.',
-      })
     }
+
+    res.status(200).json({ success: true, message: 'Added to your cart!' })
   } catch (err) {
     console.error(err)
     res.status(500).json({ success: false, error: 'Server error' })
@@ -1049,42 +1113,138 @@ async function featuredProducts(req, res) {
     res.status(500).json({ success: false, error: err.message })
   }
 }
+// Featured Products
+async function bestSellers(req, res) {
+  try {
+    const result = await db.execute(`
+      SELECT
+        p.product_id,
+        p.name,
+        p.slug,
+        p.price,
+        p.compare_at_price,
+        (
+          SELECT image_url
+          FROM product_images
+          WHERE product_id = p.product_id
+          ORDER BY display_order
+          LIMIT 1
+        ) AS image_url,
+        (
+          SELECT GROUP_CONCAT(c.name, ', ')
+          FROM product_categories pc
+          JOIN categories c ON c.category_id = pc.category_id
+          WHERE pc.product_id = p.product_id
+        ) AS category
+      FROM products p
+      WHERE p.is_bestseller = 1 AND p.is_active = 1
+      ORDER BY p.product_id DESC
+    `)
+
+    const products = result.rows.map((row) => {
+      const normalized = {}
+      for (const key in row) {
+        const val = row[key]
+        normalized[key] = typeof val === 'bigint' ? Number(val) : val
+      }
+      return normalized
+    })
+
+    res.status(200).json({ success: true, products })
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+}
+
+// Preview Product
+async function previewProduct(req, res, slug) {
+  if (req.method !== 'GET') return res.status(405).end()
+
+  try {
+    const productResult = await db.execute(
+      'SELECT * FROM products WHERE slug = ? LIMIT 1',
+      [slug]
+    )
+
+    if (!productResult.rows.length) {
+      return res.status(404).json({ success: false, error: 'Product not found' })
+    }
+
+    const product = productResult.rows[0]
+
+    const productId = Number(product.product_id || product.id) // make sure it's a number
+
+    // Get images and convert any BigInts to Numbers
+    const imagesResult = await db.execute(
+      'SELECT * FROM product_images WHERE product_id = ? ORDER BY display_order ASC',
+      [productId]
+    )
+
+    const images = (imagesResult.rows || []).map(image => {
+      const fixed = {}
+      for (const key in image) {
+        const value = image[key]
+        fixed[key] = typeof value === 'bigint' ? Number(value) : value
+      }
+      return fixed
+    })
+
+    // Also clean product itself in case there's a BigInt inside
+    const cleanProduct = {}
+    for (const key in product) {
+      const value = product[key]
+      cleanProduct[key] = typeof value === 'bigint' ? Number(value) : value
+    }
+
+    res.status(200).json({
+      success: true,
+      product: {
+        ...cleanProduct,
+        images,
+      },
+    })
+  } catch (err) {
+    console.error('ERROR in previewProduct:', err)
+    res.status(500).json({ success: false, error: err.message })
+  }
+}
+
 
 // Login
 async function login(req, res) {
-  if (req.method !== 'POST') return res.status(405).end('Only POST allowed');
+  if (req.method !== 'POST') return res.status(405).end('Only POST allowed')
 
-  const { email, password } = req.body;
+  const { email, password } = req.body
 
-  if (!email || !password) return res.status(400).json({ error: 'Missing fields' });
+  if (!email || !password) return res.status(400).json({ error: 'Missing fields' })
 
   try {
     const result = await db.execute({
       sql: `SELECT * FROM users WHERE email = ? AND is_active = 1`,
       args: [email],
-    });
+    })
 
-    const user = result.rows[0];
-    if (!user) return res.status(404).json({ error: 'User not found or inactive' });
+    const user = result.rows[0]
+    if (!user) return res.status(404).json({ error: 'User not found or inactive' })
 
-    const valid = comparePassword(password, user.password_hash);
-    if (!valid) return res.status(401).json({ error: 'Incorrect password' });
+    const valid = comparePassword(password, user.password_hash)
+    if (!valid) return res.status(401).json({ error: 'Incorrect password' })
 
     await db.execute({
       sql: `UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = ?`,
       args: [user.user_id],
-    });
+    })
 
-    const token = generateToken(user);
-    res.status(200).json({ success: true, token });
+    const token = generateToken(user)
+    res.status(200).json({ success: true, token })
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
 }
 
 // Sign Up
 async function signUp(req, res) {
-  if (req.method !== 'POST') return res.status(405).end('Only POST allowed');
+  if (req.method !== 'POST') return res.status(405).end('Only POST allowed')
 
   const {
     username,
@@ -1098,14 +1258,14 @@ async function signUp(req, res) {
     admin_role = null,
     permissions = null,
     department = null,
-  } = req.body;
+  } = req.body
 
   if (!username || !email || !password) {
-    return res.status(400).json({ error: 'Required fields missing' });
+    return res.status(400).json({ error: 'Required fields missing' })
   }
 
   try {
-    const hashed = hashPassword(password);
+    const hashed = hashPassword(password)
 
     const insertUser = await db.execute({
       sql: `
@@ -1142,9 +1302,8 @@ async function signUp(req, res) {
     res.status(200).json({ success: true, token })
   } catch (err) {
     if (err.message.includes('UNIQUE constraint')) {
-      return res.status(400).json({ error: 'Email or username already exists' });
+      return res.status(400).json({ error: 'Email or username already exists' })
     }
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message })
   }
 }
-

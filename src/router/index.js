@@ -6,6 +6,7 @@ import Users from '@/views/Admin/Pages/Users.vue'
 import Orders from '@/views/Admin/Pages/Orders.vue'
 import AddProducts from '@/views/Admin/Pages/AddProducts.vue'
 import Category from '@/views/Admin/Pages/CreateCategory.vue'
+import ProductPreview from '@/views/Admin/components/ProductPreview.vue'
 import Inventory from '@/views/Admin/Pages/Inventory.vue'
 import Support from '@/views/Admin/Pages/Suppport.vue'
 import Settings from '@/views/Admin/Pages/Settings.vue'
@@ -25,6 +26,7 @@ const routes = [
   { path: '/auth', component: Login },
   { path: '/signup', component: Signup },
   { path: '/ada', component: CreateAdmin },
+  { path: '/products/:slug', component: ProductPreview },
   {
     path: '/',
     component: () => import('@/views/HomeView.vue'),

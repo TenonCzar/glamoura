@@ -42,7 +42,7 @@
             <td class="px-4 py-2 border">{{ order.customer }}</td>
             <td class="px-4 py-2 border">{{ order.date }}</td>
             <td class="px-4 py-2 border">₦{{ order.amount }}</td>
-            <td class="px-4 py-2 border":class="{
+            <td class="px-4 py-2 border" :class="{
   'bg-amber-400': order.status.toLowerCase() === 'pending',
   'bg-green-400': order.status.toLowerCase() === 'shipped',
   'bg-blue-400': order.status.toLowerCase() === 'delivered',

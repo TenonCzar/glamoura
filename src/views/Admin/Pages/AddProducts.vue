@@ -1,7 +1,7 @@
 <template>
   <form
     @submit.prevent="submitProduct"
-    class="space-y-6 max-w-3xl mx-auto bg-white p-6 shadow rounded text-gray-700"
+    class="space-y-6 flex flex-col gap-4 max-w-3xl mx-auto p-6 shadow rounded text-gray-200"
   >
     <h2 class="text-2xl font-bold bg-primaryblue">Add Product</h2>
 
@@ -24,19 +24,46 @@
     <input v-model.number="form.cost_price" type="number" placeholder="Cost Price" class="input" />
 
     <div class="flex gap-2">
-      <label class="flex items-center"
-        ><input type="checkbox" v-model="form.is_taxable" /> Taxable</label
-      >
-      <label class="flex items-center"
-        ><input type="checkbox" v-model="form.is_active" /> Active</label
-      >
-      <label class="flex items-center"
-        ><input type="checkbox" v-model="form.is_featured" /> Featured</label
-      >
-      <label class="flex items-center"
-        ><input type="checkbox" v-model="form.is_bestseller" /> Bestseller</label
-      >
-      <label class="flex items-center"><input type="checkbox" v-model="form.is_new" /> New</label>
+      <label class="flex items-center">
+        <input 
+          type="checkbox" 
+          :checked="form.is_taxable === 1" 
+          @change="form.is_taxable = $event.target.checked ? 1 : 0" 
+        /> 
+        Taxable
+      </label>
+      <label class="flex items-center">
+        <input 
+          type="checkbox" 
+          :checked="form.is_active === 1" 
+          @change="form.is_active = $event.target.checked ? 1 : 0" 
+        /> 
+        Active
+      </label>
+      <label class="flex items-center">
+        <input 
+          type="checkbox" 
+          :checked="form.is_featured === 1" 
+          @change="form.is_featured = $event.target.checked ? 1 : 0" 
+        /> 
+        Featured
+      </label>
+      <label class="flex items-center">
+        <input 
+          type="checkbox" 
+          :checked="form.is_bestseller === 1" 
+          @change="form.is_bestseller = $event.target.checked ? 1 : 0" 
+        /> 
+        Bestseller
+      </label>
+      <label class="flex items-center">
+        <input 
+          type="checkbox" 
+          :checked="form.is_new === 1" 
+          @change="form.is_new = $event.target.checked ? 1 : 0" 
+        /> 
+        New
+      </label>
     </div>
 
     <input v-model.number="form.weight" type="number" placeholder="Weight" class="input" />
@@ -85,6 +112,7 @@
         <option value="refurbished">Refurbished</option>
       </select>
     </div>
+    
     <!-- Variants -->
     <div class="mt-6 space-y-4">
       <h3 class="font-bold">Variants</h3>
@@ -104,34 +132,38 @@
           <option value="lb">lb</option>
           <option value="oz">oz</option>
         </select>
-        <label class="flex items-center"
-          ><input type="checkbox" v-model="variant.is_default" /> Default Variant</label
-        >
+        <label class="flex items-center">
+          <input 
+            type="checkbox" 
+            :checked="variant.is_default === 1" 
+            @change="variant.is_default = $event.target.checked ? 1 : 0" 
+          /> 
+          Default Variant
+        </label>
         <button @click.prevent="removeVariant(index)" class="text-red-500">Remove</button>
 
         <input
-      v-model.number="variant.inventory_quantity"
-      type="number"
-      placeholder="Inventory Quantity"
-      class="input"
-    />
-    <input
-      v-model.number="variant.low_stock_threshold"
-      type="number"
-      placeholder="Low Stock Threshold"
-      class="input"
-    />
-    <input
-      v-model="variant.location"
-      type="text"
-      placeholder="Stock Location (optional)"
-      class="input"
-    />
+          v-model.number="variant.inventory_quantity"
+          type="number"
+          placeholder="Inventory Quantity"
+          class="input"
+        />
+        <input
+          v-model.number="variant.low_stock_threshold"
+          type="number"
+          placeholder="Low Stock Threshold"
+          class="input"
+        />
+        <input
+          v-model="variant.location"
+          type="text"
+          placeholder="Stock Location (optional)"
+          class="input"
+        />
       </div>
       <button @click.prevent="addVariant" class="bg-blue-500 text-white px-3 py-1 rounded">
         + Add Variant
       </button>
-      
     </div>
 
     <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded">Create Product</button>
@@ -141,6 +173,7 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import Multiselect from 'vue-multiselect'
+
 const categories = ref([])
 const form = ref({
   name: '',
@@ -150,30 +183,30 @@ const form = ref({
   price: 0,
   compare_at_price: null,
   cost_price: null,
-  is_taxable: true,
+  is_taxable: 1, // Changed from boolean to number
   weight: null,
   weight_unit: 'g',
-  is_active: true,
-  is_featured: false,
-  is_bestseller: false,
-  is_new: false,
+  is_active: 1, // Changed from boolean to number
+  is_featured: 0, // Changed from boolean to number
+  is_bestseller: 0, // Changed from boolean to number
+  is_new: 0, // Changed from boolean to number
   slug: '',
   meta_title: '',
   meta_description: '',
   images: [],
   variants: [],
+  condition: 'new'
 })
 
 const handleImageUpload = (e) => {
   form.value.images = Array.from(e.target.files)
 }
 
-form.value.condition = 'new'
 watch(
   () => form.value.condition,
   (newVal) => {
-    form.value.is_new = newVal === 'new'
-  },
+    form.value.is_new = newVal === 'new' ? 1 : 0
+  }
 )
 
 const addVariant = () => {
@@ -184,7 +217,7 @@ const addVariant = () => {
     compare_at_price: null,
     weight: null,
     weight_unit: 'g',
-    is_default: false,
+    is_default: 0, // Changed from boolean to number
     inventory_quantity: 0,
     low_stock_threshold: 5,
     location: '',
@@ -223,6 +256,7 @@ const submitProduct = async () => {
     alert('Failed: ' + result.error)
   }
 }
+
 onMounted(async () => {
   try {
     const res = await fetch('/api/admin/getcategory')
@@ -241,6 +275,5 @@ textarea {
   padding: 5px;
   border-radius: 5px;
   outline: none;
-  /* @apply w-full border border-gray-300 p-2 rounded; */
 }
 </style>

@@ -110,6 +110,139 @@
   </div>
 </template>
 
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useAuth } from '@/stores/auth'
+import { useRouter } from 'vue-router'
+
+const auth = useAuth()
+const router = useRouter()
+const activeForm = ref('login')
+const email = ref('')
+const password = ref('')
+const error = ref(null)
+const isMobile = ref(false)
+const localCart = JSON.parse(localStorage.getItem('cart')) || []
+
+async function syncLocalCart() {
+  const localCart = JSON.parse(localStorage.getItem('cart')) || []
+
+  for (const item of localCart) {
+    await fetch('/api/add-to-cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(item),
+    })
+  }
+
+  localStorage.removeItem('cart')
+}
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768 // Standard mobile breakpoint
+}
+
+const toggleForm = () => {
+  activeForm.value = activeForm.value === 'login' ? 'signup' : 'login'
+}
+
+async function login() {
+  error.value = null
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email.value, password: password.value }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Login failed')
+    auth.setToken(data.token)
+    await syncLocalCart()
+    router.push('/')
+  } catch (err) {
+    error.value = err.message
+  }
+}
+
+// SignUp Logic
+
+const formData = ref({
+  username: '',
+  email: '',
+  password: '',
+  first_name: '',
+  last_name: '',
+  phone: '',
+  isAdmin: false,
+})
+
+const isLoading = ref(false)
+const message = ref({ text: '', type: '' })
+
+const handleSubmit = async () => {
+  // Basic validation
+  if (!formData.value.username || !formData.value.email || !formData.value.password) {
+    showMessage('Please fill in all required fields', 'error')
+    return
+  }
+
+  isLoading.value = true
+  message.value = { text: '', type: '' }
+
+  try {
+    const response = await fetch('/api/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData.value),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Registration failed')
+    }
+
+    showMessage('Account created successfully! Redirecting to login...', 'success')
+
+    // Reset form
+    formData.value = {
+      username: '',
+      email: '',
+      password: '',
+      first_name: '',
+      last_name: '',
+      phone: '',
+      isAdmin: formData.value.isAdmin ? 1 : 0,
+    }
+
+    // Redirect to login after 2 seconds
+    setTimeout(() => {
+      router.push('/auth#login')
+    }, 2000)
+  } catch (error) {
+    console.error('Signup error:', error)
+    showMessage(error.message, 'error')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const showMessage = (text, type) => {
+  message.value = { text, type }
+  setTimeout(() => {
+    message.value = { text: '', type: '' }
+  }, 5000)
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+</script>
+
+
 <style scoped>
 .auth-container {
   display: flex;
@@ -340,118 +473,3 @@ button:disabled {
   margin-top: 1rem;
 }
 </style>
-<script setup>
-import { ref, onMounted } from 'vue'
-import { useAuth } from '@/stores/auth'
-import { useRouter } from 'vue-router'
-
-const auth = useAuth()
-const router = useRouter()
-const activeForm = ref('login')
-const email = ref('')
-const password = ref('')
-const error = ref(null)
-const isMobile = ref(false)
-
-const checkMobile = () => {
-  isMobile.value = window.innerWidth < 768 // Standard mobile breakpoint
-}
-
-const toggleForm = () => {
-  activeForm.value = activeForm.value === 'login' ? 'signup' : 'login'
-}
-
-async function login() {
-  error.value = null
-  try {
-    const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.value, password: password.value }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Login failed')
-    auth.setToken(data.token)
-    router.push('/')
-  } catch (err) {
-    error.value = err.message
-  }
-}
-
-// SignUp Logic
-
-const formData = ref({
-  username: '',
-  email: '',
-  password: '',
-  first_name: '',
-  last_name: '',
-  phone: '',
-  isAdmin: false,
-})
-
-const isLoading = ref(false)
-const message = ref({ text: '', type: '' })
-
-const handleSubmit = async () => {
-  // Basic validation
-  if (!formData.value.username || !formData.value.email || !formData.value.password) {
-    showMessage('Please fill in all required fields', 'error')
-    return
-  }
-
-  isLoading.value = true
-  message.value = { text: '', type: '' }
-
-  try {
-    const response = await fetch('/api/signup', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData.value),
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Registration failed')
-    }
-
-    showMessage('Account created successfully! Redirecting to login...', 'success')
-
-    // Reset form
-    formData.value = {
-      username: '',
-      email: '',
-      password: '',
-      first_name: '',
-      last_name: '',
-      phone: '',
-      isAdmin: formData.value.isAdmin ? 1 : 0,
-    }
-
-    // Redirect to login after 2 seconds
-    setTimeout(() => {
-      router.push('/login')
-    }, 2000)
-  } catch (error) {
-    console.error('Signup error:', error)
-    showMessage(error.message, 'error')
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const showMessage = (text, type) => {
-  message.value = { text, type }
-  setTimeout(() => {
-    message.value = { text: '', type: '' }
-  }, 5000)
-}
-
-onMounted(() => {
-  checkMobile()
-  window.addEventListener('resize', checkMobile)
-})
-</script>

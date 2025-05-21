@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/main.js",
+      "src": "/api/main.js",
       "use": "@vercel/node"
     },
     {
@@ -17,11 +17,13 @@
     },
     {
       "src": "/(.*).(js|css|png|jpg|jpeg|webp|gif|svg|woff2|woff|ttf|otf|eot|ico|json)",
-      "dest": "/dist/$1.$2"
+      "dest": "/dist/$1.$2",
+      "continue": "true"
     },
     {
       "src": "/(.*)",
-      "dest": "/dist/index.html"
+      "dest": "/dist/index.html",
+      "continue": "true"
     }
   ]
 }

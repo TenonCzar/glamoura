@@ -12,6 +12,9 @@ export default defineConfig({
   ],
   build:{
     target: 'es2015'}, 
+    outDir: 'dist',
+    // Copy API files to dist
+    assetsInclude: ['api/**/*'],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

@@ -16,6 +16,7 @@ const form = formidable({
 })
 
 export default async function handler(req, res) {
+  console.log(`Incoming ${req.method} request to: ${req.url}`)
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
@@ -27,7 +28,10 @@ export default async function handler(req, res) {
   }
 
   // Define routePath early so you can use it anywhere
-  const routePath = req.url.split('?')[0].replace(/\.js$/, '')
+  const basePath = '/api'
+  const routePath = req.url.startsWith(basePath)
+    ? req.url.slice(basePath.length).split('?')[0]
+    : req.url.split('?')[0]
 
   // Handle the special case for product preview
   if (routePath.startsWith('/api/products/')) {

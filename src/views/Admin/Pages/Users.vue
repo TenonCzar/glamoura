@@ -17,7 +17,7 @@
             >
                 <div class="bouncing-logo">
                     <img 
-                        src="/src/assets/logo.webp" 
+                        src="@/assets/logo.webp" 
                         alt="Loading..." 
                         class="h-24 w-auto"
                     />

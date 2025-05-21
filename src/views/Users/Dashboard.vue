@@ -169,10 +169,10 @@
   import { ref, onMounted } from 'vue'
   
   // Components
-  import DashboardCard from '/src/views/Users/components/DashboardCard.vue'
-  import OrderItem from '/src/views/Users/components/OrderItem.vue'
-  import ProductCard from '/src/views/Users/components/ProductCard.vue'
-  import ActionButton from '/src/views/Users/components/ActionButton.vue'
+  import DashboardCard from '@/views/Users/components/DashboardCard.vue'
+  import OrderItem from '@/views/Users/components/OrderItem.vue'
+  import ProductCard from '@/views/Users/components/ProductCard.vue'
+  import ActionButton from '@/views/Users/components/ActionButton.vue'
   
   // Mock data - replace with API calls
   const user = ref({

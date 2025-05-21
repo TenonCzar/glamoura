@@ -9,7 +9,7 @@
             >
                 <div class="bouncing-logo">
                     <img 
-                        src="/src/assets/logo.webp" 
+                        src="@/assets/logo.webp" 
                         alt="Loading..." 
                         class="h-24 w-auto"
                     />
@@ -95,7 +95,7 @@
 
 <script setup>
 import { ref, onMounted,computed } from 'vue'
-import ResponseDisplayer from '/src/components/ResponseDisplayer.vue'
+import ResponseDisplayer from '@/components/ResponseDisplayer.vue'
 
 const responseDisplayer = ref(null)
 const recentOrders = ref([])

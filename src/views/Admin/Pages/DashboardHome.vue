@@ -6,7 +6,7 @@
               >
                   <div class="bouncing-logo">
                       <img 
-                          src="/src/assets/logo.webp" 
+                          src="@/assets/logo.webp" 
                           alt="Loading..." 
                           class="h-24 w-auto"
                       />
@@ -72,7 +72,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import SalesChart from '/src/views/Admin/components/SalesChart.vue'
+import SalesChart from '@/views/Admin/components/SalesChart.vue'
 const responseDisplayer = ref(null)
 // import {Icon} from '@iconify/vue'
 

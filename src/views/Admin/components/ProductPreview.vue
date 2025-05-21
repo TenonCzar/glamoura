@@ -5,9 +5,9 @@ import { Swiper, SwiperSlide } from 'swiper/vue'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
-import Cart from '/src/views/Users/components/MinimalCart.vue'
+import Cart from '@/views/Users/components/MinimalCart.vue'
 import Rating from './Rating.vue'
-import BestSeller from '/src/views/Admin/components/BestSellers.vue'
+import BestSeller from '@/views/Admin/components/BestSellers.vue'
 import { Autoplay, Pagination, Navigation } from 'swiper/modules'
 
 const modules = [Autoplay, Pagination, Navigation]

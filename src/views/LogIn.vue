@@ -112,7 +112,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useAuth } from '/src/stores/auth'
+import { useAuth } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 
 const auth = useAuth()

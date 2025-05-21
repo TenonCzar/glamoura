@@ -17,7 +17,7 @@
     },
     {
       "src": "/(.*).(js|css|png|jpg|jpeg|webp|gif|svg|woff2|woff|ttf|otf|eot|ico|json)",
-      "dest": "/dist/$1.$2",
+      "dest": "/dist/",
       "continue": "true"
     },
     {

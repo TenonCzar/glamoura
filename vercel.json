@@ -23,7 +23,7 @@
     {
       "src": "/(.*)",
       "dest": "/dist/index.html",
-      "continue": "true"
+      "continue": true
     }
   ]
 }

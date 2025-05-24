@@ -16,7 +16,6 @@ const form = formidable({
 })
 
 export default async function handler(req, res) {
-  console.log(`Incoming ${req.method} request to: ${req.url}`)
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
@@ -28,10 +27,7 @@ export default async function handler(req, res) {
   }
 
   // Define routePath early so you can use it anywhere
-  const basePath = '/api'
-  const routePath = req.url.startsWith(basePath)
-    ? req.url.slice(basePath.length).split('?')[0]
-    : req.url.split('?')[0]
+  const routePath = req.url.split('?')[0].replace(/\.js$/, '')
 
   // Handle the special case for product preview
   if (routePath.startsWith('/api/products/')) {
@@ -70,6 +66,8 @@ export default async function handler(req, res) {
         return await orderStats(req, res)
       case '/api/add-to-cart':
         return await addToCart(req, res)
+      case '/api/update-cart':
+        return await handleUpdateCart(req, res)
       case '/api/adminpin':
         return await adminPin(req, res)
       case '/api/createadmin':
@@ -133,8 +131,7 @@ function normalizeBigInts(obj) {
     const normalized = {}
     for (const key in obj) {
       const value = obj[key]
-      normalized[key] =
-        typeof value === 'bigint' ? Number(value) : normalizeBigInts(value)
+      normalized[key] = typeof value === 'bigint' ? Number(value) : normalizeBigInts(value)
     }
     return normalized
   }
@@ -717,7 +714,6 @@ async function createProduct(req, res) {
   })
 }
 
-
 // Edit Products
 async function editProducts(req, res) {
   if (req.method !== 'PUT') return res.status(405).end()
@@ -920,20 +916,24 @@ async function addToCart(req, res) {
 
   const { product_id, variant_id = null, quantity = 1, price } = req.body
 
-  const token = req.cookies?.token
+  let token = req.cookies?.token
+  if (!token && req.headers.authorization) {
+    token = req.headers.authorization.split(' ')[1] // Bearer <token>
+  }
   let user = null
 
   if (token) {
     try {
       user = jwt.verify(token, process.env.JWT_SECRET)
-    } catch {
-      user = null
+      console.log('Decoded user:', user)
+    } catch (err){
+      console.error('JWT verification error:', err)
     }
   }
 
   if (!user) {
     // For guests: We don’t store cart on backend now
-    return res.status(200).json({
+    return res.status(201).json({
       success: true,
       message: 'Added To Cart. Please log in to save your cart.',
     })
@@ -953,7 +953,7 @@ async function addToCart(req, res) {
 
     // Check if the product + variant already exists in cart_items
     let existing = await db.execute(
-      `SELECT * FROM cart_items WHERE cart_id = ? AND product_id = ? AND (variant_id IS ? OR variant_id = ?)`,
+      `SELECT * FROM cart_items WHERE cart_id = ? AND product_id = ? AND (variant_id IS NULL AND ? IS NULL OR variant_id = ?)`,
       [cart_id, product_id, variant_id, variant_id],
     )
 
@@ -977,6 +977,116 @@ async function addToCart(req, res) {
   } catch (err) {
     console.error(err)
     res.status(500).json({ success: false, error: 'Server error' })
+  }
+}
+
+// Update Cart
+// Update Cart - Unified endpoint for all cart modifications
+async function handleUpdateCart(req, res) {
+  if (req.method !== 'POST') return res.status(405).end()
+
+  const { action, product_id, variant_id = null, quantity = 1 } = req.body
+
+  // Get token from cookies or Authorization header
+  let token = req.cookies?.token
+  if (!token && req.headers.authorization) {
+    token = req.headers.authorization.split(' ')[1] // Bearer <token>
+  }
+
+  let user = null
+  if (token) {
+    try {
+      user = jwt.verify(token, process.env.JWT_SECRET)
+    } catch (err) {
+      console.error('JWT verification error:', err)
+      return res.status(401).json({ error: 'Invalid token' })
+    }
+  }
+
+  if (!user) {
+    return res.status(401).json({ error: 'Authentication required' })
+  }
+
+  try {
+    // Find user's cart
+    let cart = await db.execute(`SELECT * FROM carts WHERE user_id = ?`, [user.user_id])
+    let cart_id
+    if (cart.rows.length === 0) {
+      // Create cart if doesn't exist
+      const insert = await db.execute(`INSERT INTO carts (user_id) VALUES (?)`, [user.user_id])
+      cart_id = insert.lastInsertRowid
+    } else {
+      cart_id = cart.rows[0].cart_id
+    }
+
+    switch (action) {
+      case 'add':
+        // Check if item exists
+        const existingAdd = await db.execute(
+          `SELECT * FROM cart_items 
+           WHERE cart_id = ? AND product_id = ? 
+           AND (variant_id IS NULL AND ? IS NULL OR variant_id = ?)`,
+          [cart_id, product_id, variant_id, variant_id]
+        )
+
+        if (existingAdd.rows.length > 0) {
+          // Update quantity
+          const newQuantity = existingAdd.rows[0].quantity + quantity
+          await db.execute(
+            `UPDATE cart_items SET quantity = ? WHERE cart_item_id = ?`,
+            [newQuantity, existingAdd.rows[0].cart_item_id]
+          )
+        } else {
+          // Get product price (you might want to pass this from frontend instead)
+          const product = await db.execute(
+            `SELECT price FROM products WHERE product_id = ?`,
+            [product_id]
+          )
+          const price = product.rows[0]?.price || 0
+          
+          // Insert new item
+          await db.execute(
+            `INSERT INTO cart_items (cart_id, product_id, variant_id, quantity, price)
+             VALUES (?, ?, ?, ?, ?)`,
+            [cart_id, product_id, variant_id, quantity, price]
+          )
+        }
+        break
+
+      case 'remove':
+        await db.execute(
+          `DELETE FROM cart_items 
+           WHERE cart_id = ? AND product_id = ? 
+           AND (variant_id IS NULL AND ? IS NULL OR variant_id = ?)`,
+          [cart_id, product_id, variant_id, variant_id]
+        )
+        break
+
+      case 'update':
+        if (quantity < 1) {
+          await db.execute(
+            `DELETE FROM cart_items 
+             WHERE cart_id = ? AND product_id = ? 
+             AND (variant_id IS NULL AND ? IS NULL OR variant_id = ?)`,
+            [cart_id, product_id, variant_id, variant_id],
+          )
+        }
+        await db.execute(
+          `UPDATE cart_items SET quantity = ? 
+           WHERE cart_id = ? AND product_id = ? 
+           AND (variant_id IS NULL AND ? IS NULL OR variant_id = ?)`,
+          [quantity, cart_id, product_id, variant_id, variant_id]
+        )
+        break
+
+      default:
+        return res.status(400).json({ error: 'Invalid action' })
+    }
+
+    res.status(200).json({ success: true })
+  } catch (error) {
+    console.error('Cart update error:', error)
+    res.status(500).json({ error: 'Server error' })
   }
 }
 
@@ -1165,10 +1275,7 @@ async function previewProduct(req, res, slug) {
   if (req.method !== 'GET') return res.status(405).end()
 
   try {
-    const productResult = await db.execute(
-      'SELECT * FROM products WHERE slug = ? LIMIT 1',
-      [slug]
-    )
+    const productResult = await db.execute('SELECT * FROM products WHERE slug = ? LIMIT 1', [slug])
 
     if (!productResult.rows.length) {
       return res.status(404).json({ success: false, error: 'Product not found' })
@@ -1181,10 +1288,10 @@ async function previewProduct(req, res, slug) {
     // Get images and convert any BigInts to Numbers
     const imagesResult = await db.execute(
       'SELECT * FROM product_images WHERE product_id = ? ORDER BY display_order ASC',
-      [productId]
+      [productId],
     )
 
-    const images = (imagesResult.rows || []).map(image => {
+    const images = (imagesResult.rows || []).map((image) => {
       const fixed = {}
       for (const key in image) {
         const value = image[key]
@@ -1212,7 +1319,6 @@ async function previewProduct(req, res, slug) {
     res.status(500).json({ success: false, error: err.message })
   }
 }
-
 
 // Login
 async function login(req, res) {

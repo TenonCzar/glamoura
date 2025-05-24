@@ -46,7 +46,7 @@
         
         <!-- Action Buttons -->
         <div class="flex gap-2">
-          <button @click.prevent="addToCart(product)" class="text-orange-400 hover:text-orange-600">
+          <button @click.prevent="handleAddToCart(product)" class="text-orange-400 hover:text-orange-600">
             <Shopping-Cart :size="18" />
           </button>
           <button @click.prevent="wishList(product)" class="text-orange-400 hover:text-orange-600">
@@ -63,6 +63,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { addToCart } from '@/utils/cart'
+import { useAuth } from '@/stores/auth'
 
 const newArrivals = ref([])
 const isLoading = ref(true)
@@ -74,62 +76,84 @@ const slugify = (text) => {
   return text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '')
 }
 
-const addToCart = async (product) => {
+const handleAddToCart = async (product) => {
   try {
-    const isLoggedIn = false
-    let cart = JSON.parse(localStorage.getItem('cart')) || []
+    // 1. Input sanitization
+    const sanitizedProduct = {
+      id: Number(product.id),
+      name: String(product.name),
+      image: String(product.image),
+      variant_id: product.variant_id ? Number(product.variant_id) : null,
+      price: Math.max(0, Number(product.price)), // Prevent negative prices
+      max_per_order: product.max_per_order ? Number(product.max_per_order) : 10 // Default limit
+    };
 
-    const existingIndex = cart.findIndex(
-      (item) =>
-        item.product_id === product.id &&
-        (item.variant_id || null) === (product.variant_id || null),
-    )
+    // 2. Check local cart first for quantity limits
+    const localCart = JSON.parse(localStorage.getItem('cart')) || [];
+    const existingItem = localCart.find(
+      item => item.product_id === sanitizedProduct.id && 
+      (item.variant_id || null) === (sanitizedProduct.variant_id || null)
+    );
 
-    if (existingIndex > -1) {
-      cart[existingIndex].quantity += 1
-    } else {
-      cart.push({
-        product_id: product.id,
-        product_name: product.name,
-        product_image: product.image,
-        variant_id: product.variant_id || null,
-        quantity: 1,
-        price: product.price,
-      })
+    // 3. Validate against limits
+    const proposedQty = existingItem ? existingItem.quantity + 1 : 1;
+    if (proposedQty > sanitizedProduct.max_per_order) {
+      throw new Error(`Maximum ${sanitizedProduct.max_per_order} per order`);
     }
 
-    localStorage.setItem('cart', JSON.stringify(cart))
+    // 4. Update localStorage immediately (optimistic update)
+    const updatedCart = existingItem
+      ? localCart.map(item => 
+          item.product_id === sanitizedProduct.id && 
+          (item.variant_id || null) === (sanitizedProduct.variant_id || null)
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      : [
+          ...localCart,
+          {
+            product_id: sanitizedProduct.id,
+            product_name: sanitizedProduct.name,
+            product_image: sanitizedProduct.image,
+            variant_id: sanitizedProduct.variant_id,
+            quantity: 1,
+            price: sanitizedProduct.price,
+          }
+        ];
 
-    if (isLoggedIn) {
-      const res = await fetch('/api/add-to-cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          product_id: product.id,
-          variant_id: product.variant_id || null,
-          quantity: 1,
-          price: product.price,
-        }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        responseDisplayer.value.showSuccess('Added To Cart')
-      } else {
-        responseDisplayer.value.showError('Failed to add to cart backend')
-      }
+    localStorage.setItem('cart', JSON.stringify(updatedCart));
+
+    // 5. Sync with backend if logged in
+    const auth = useAuth();
+    if (auth.isAuthenticated()) {
+      const result = await addToCart(sanitizedProduct);
+      responseDisplayer.value.showSuccess(result.message);
     } else {
-      responseDisplayer.value.showSuccess('Added To Cart. Login To Checkout')
+      responseDisplayer.value.showSuccess(
+        `${sanitizedProduct.name} added to cart. Login to save your progress.`
+      );
     }
+
   } catch (err) {
-    responseDisplayer.value.showError('Error adding to cart: ' + err.message)
+    // Revert localStorage on error
+    localStorage.setItem('cart', JSON.stringify(
+      JSON.parse(localStorage.getItem('cart')) // Revert to previous
+    ));
+    
+    responseDisplayer.value.showError(
+      err.message.includes('Maximum') 
+        ? err.message 
+        : `Couldn't add to cart: ${err.message}`
+    );
   }
-}
+};
 
 onMounted(async () => {
   const cached = localStorage.getItem(CACHE_KEY)
 
   // 1. Show cached immediately (even if expired)
   if (cached) {
+    isLoading.value = false;
     try {
       const parsed = JSON.parse(cached)
       newArrivals.value = parsed.data

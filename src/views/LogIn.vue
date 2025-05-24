@@ -99,12 +99,12 @@
           <div class="form-group">
             <input v-model="password" type="password" placeholder="Password" required />
           </div>
+          <p class="error-message" v-if="error">{{ error }}</p>
           <button type="submit">Login</button>
           <p class="toggle-form">
             No Account Yet? <a href="#" @click.prevent="toggleForm">Sign Up</a>
           </p>
         </form>
-        <p class="error-message" v-if="error">{{ error }}</p>
       </div>
     </div>
   </div>

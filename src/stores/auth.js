@@ -8,12 +8,22 @@ export const useAuth = defineStore('auth', {
   }),
   actions: {
     setToken(token) {
+      // Ensure we never store a stringified string
       this.token = token
-      localStorage.setItem('token', token)
+      if (token) {
+        localStorage.setItem('token', token)
+      } else {
+        localStorage.removeItem('token')
+      }
     },
     logout() {
       this.token = null
+      this.isAdmin = false
       localStorage.removeItem('token')
+    },
+    // Add this new method to check auth state
+    isAuthenticated() {
+      return !!this.token
     },
   },
 })

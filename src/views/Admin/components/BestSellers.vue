@@ -98,7 +98,7 @@ const loadCached = () => {
 // Fetch from backend and update cache & UI silently
 const fetchAndUpdate = async (previous = null) => {
   try {
-    const res = await fetch('/api/admin/bestsellers')
+    const res = await fetch('/api/bestsellers')
     const data = await res.json()
 
     if (data.success) {

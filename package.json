@@ -27,6 +27,7 @@
     "express-fileupload": "^1.5.1",
     "formidable": "^3.5.4",
     "jsonwebtoken": "^9.0.2",
+    "lodash-es": "^4.17.21",
     "lucide-vue-next": "^0.510.0",
     "pinia": "^3.0.1",
     "primeicons": "^7.0.0",

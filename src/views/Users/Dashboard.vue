@@ -173,10 +173,11 @@
   import OrderItem from '@/views/Users/components/OrderItem.vue'
   import ProductCard from '@/views/Users/components/ProductCard.vue'
   import ActionButton from '@/views/Users/components/ActionButton.vue'
-  
+  const loggedUser = localStorage.getItem('token')
+
   // Mock data - replace with API calls
   const user = ref({
-    name: 'Tenon Czar',
+    name: loggedUser,
     email: 'tenonczar@gmail.com',
     phone: '+234 8158867576',
     joinDate: '2025-05-15',

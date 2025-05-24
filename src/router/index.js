@@ -59,7 +59,7 @@ const routes = [
   {
     path: '/user',
     component: Dashboard,
-    // meta: { requiresAuth: true },
+    meta: { requiresAuth: true },
     children: [
       { path: '', component: Dashboard },
       { path: 'orders', component: Userorders },
@@ -77,7 +77,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const auth = useAuth()
-  if (to.meta.requiresAuth && !auth.token) {
+  if (to.meta.requiresAuth && !auth.isAuthenticated()) {
     next('/auth')
   } else {
     next()

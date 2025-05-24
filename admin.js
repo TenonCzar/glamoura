@@ -11,50 +11,52 @@ app.use(bodyParser.json())
 // Get users with pagination and search
 app.get('/api/admin/users', async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = '' } = req.query;
-    const offset = (page - 1) * limit;
-    const q = `%${search}%`;
+    const { page = 1, limit = 10, search = '' } = req.query
+    const offset = (page - 1) * limit
+    const q = `%${search}%`
 
     const users = await db.execute(
       `SELECT * FROM users WHERE username LIKE ? OR email LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-      [q, q, limit, offset]
-    );
+      [q, q, limit, offset],
+    )
 
     const count = await db.execute(
       `SELECT COUNT(*) as total FROM users WHERE username LIKE ? OR email LIKE ?`,
-      [q, q]
-    );
+      [q, q],
+    )
 
-    res.json({ success: true, users: users.rows, total: count.rows[0].total });
+    res.json({ success: true, users: users.rows, total: count.rows[0].total })
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: err.message })
   }
-});
+})
 
 // Update user
 app.put('/api/admin/users/:id', async (req, res) => {
   try {
-    const { username, email, balance } = req.body;
-    const { id } = req.params;
+    const { username, email, balance } = req.body
+    const { id } = req.params
 
-    await db.execute(
-      `UPDATE users SET username = ?, email = ?, balance = ? WHERE id = ?`,
-      [username, email, balance, id]
-    );
+    await db.execute(`UPDATE users SET username = ?, email = ?, balance = ? WHERE id = ?`, [
+      username,
+      email,
+      balance,
+      id,
+    ])
 
-    res.json({ success: true, message: 'User updated' });
+    res.json({ success: true, message: 'User updated' })
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: err.message })
   }
-});
+})
 
 // Delete user
 app.delete('/api/admin/users/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    await db.execute(`DELETE FROM users WHERE id = ?`, [id]);
-    res.json({ success: true, message: 'User deleted' });
+    const { id } = req.params
+    await db.execute(`DELETE FROM users WHERE id = ?`, [id])
+    res.json({ success: true, message: 'User deleted' })
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: err.message })
   }
-});
+})

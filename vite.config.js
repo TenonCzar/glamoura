@@ -22,10 +22,8 @@ export default defineConfig({
     emptyOutDir: true,
     // ▼ Optional: Reduce chunking issues
     rollupOptions: {
-      output: {
-        manualChunks: {
-          vue: ['vue', 'vue-router', 'pinia'],
-        },
+      input: {
+        main: './index.html', // Path to your entry HTML file
       },
     },
   },

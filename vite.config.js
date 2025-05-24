@@ -20,12 +20,17 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    // ▼ Optional: Reduce chunking issues
     rollupOptions: {
       input: {
-        main: './index.html', // Path to your entry HTML file
+        main: './index.html'
       },
-    },
+      output: {
+        // Add this to ensure HTML goes to dist root
+        entryFileNames: 'assets/[name].[hash].js',
+        chunkFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash].[ext]'
+      }
+    }
   },
   resolve: {
     alias: {

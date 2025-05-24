@@ -1,50 +1,37 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "api/main.js",
-        "use": "@vercel/node"
-      },
-      {
-        "src": "vite.config.js",
-        "use": "@vercel/vite",
-        "config": {
-          "outputDirectory": "dist"
-        }
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/main.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "vite.config.js",
+      "use": "@vercel/vite",
+      "config": {
+        "outputDirectory": "dist"
       }
-    ],
-    "rewrites": [
-      {
-        "source": "/api/(.*)",
-        "destination": "/api/main.js"
-      },
-      {
-        "source": "/assets/(.*)",
-        "destination": "/dist/assets/$1"
-      },
-      {
-        "source": "/(.*)",
-        "destination": "/dist/index.html"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/main.js",
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/dist/assets/$1",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
       }
-    ],
-    "headers": [
-      {
-        "source": "/assets/(.*)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "public, max-age=31536000, immutable"
-          }
-        ]
-      },
-      {
-        "source": "/(.*)",
-        "headers": [
-          {
-            "key": "Content-Type",
-            "value": "text/html; charset=utf-8"
-          }
-        ]
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dist/index.html",
+      "headers": {
+        "Content-Type": "text/html; charset=utf-8"
       }
-    ]
-  }
+    }
+  ]
+}

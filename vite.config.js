@@ -24,14 +24,8 @@ export default defineConfig({
       input: './index.html',
       output: {
         assetFileNames: 'assets/[name].[hash].[ext]',
-        entryFileNames: 'assets/[name].[hash].js',
-        chunkFileNames: 'assets/[name].[hash].js'
+        entryFileNames: 'assets/[name].[hash].js'
       }
     }
-  },
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('/src', import.meta.url)),
-    },
-  },
+  }
 })

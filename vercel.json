@@ -6,8 +6,11 @@
       "use": "@vercel/node"
     },
     {
-      "src": "dist/index.html",
-      "use": "@vercel/static"
+      "src": "vite.config.js",
+      "use": "@vercel/vite",
+      "config": {
+        "outputDirectory": "dist"
+      }
     }
   ],
   "routes": [
@@ -22,6 +25,12 @@
     {
       "src": "/(.*)",
       "dest": "/dist/index.html"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

@@ -21,20 +21,17 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
-      input: {
-        main: './index.html'
-      },
+      input: './index.html',
       output: {
-        // Add this to ensure HTML goes to dist root
+        assetFileNames: 'assets/[name].[hash].[ext]',
         entryFileNames: 'assets/[name].[hash].js',
-        chunkFileNames: 'assets/[name].[hash].js',
-        assetFileNames: 'assets/[name].[hash].[ext]'
+        chunkFileNames: 'assets/[name].[hash].js'
       }
     }
   },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@': fileURLToPath(new URL('/src', import.meta.url)),
     },
   },
 })

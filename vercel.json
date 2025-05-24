@@ -6,7 +6,7 @@
       "use": "@vercel/node"
     },
     {
-      "src": "dist/assets/index-*.html",
+      "src": "dist/index.html",
       "use": "@vercel/static"
     }
   ],
@@ -21,7 +21,13 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/dist/assets/index-0zUjtYRQ.html"
+      "dest": "/dist/index.html"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
